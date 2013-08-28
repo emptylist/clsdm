@@ -1,0 +1,121 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include <algorithm>
+
+#include "localScale.h"
+#include "distances"
+
+using namespace std;
+
+bool compare(const DistPoint x&, const DistPoint y&)
+{
+  //To be passed to the library QuickSort function to order the 
+  // data points with respect to their distance from the data point
+  // of interest.
+
+  return x.distance < y.distance;
+}
+
+vector<DistPoint> distances_from_point(const int index, const dataSet X&)
+{
+  //Takes an integer index value and a reference to the dataSet struct
+  // of interest.  Computes the distance from each point in the data set
+  // to the point of interest denoted by the index value.
+  
+  dataSet::size_type sz = dataSet.size();
+
+  vector<DistPoint> distances(sz); // Runtime pre-allocate the memory needed.
+  dataPoint target = X[index];  //The data point we're interested in.
+  
+  for (dataSet::size_type i = 0; i < sz; ++i) {
+    distances[i] = DistPoint {rmsd(target, X[i]), dataPoint * X[i]}
+  }
+  
+  return distances;
+}
+
+vector<double> partition_eps(const double eps)
+{
+  vector<double> eps_partition(EPS_PARTITION_SIZE);
+
+  for (vector<double>::size_type i = 0; i < EPS_PARTITION_SIZE; ++i) {
+    eps_partition[i] = (i/EPS_PARITION_SIZE) * eps;
+  }
+  
+  return eps_partition;
+}
+
+vector<dataPoint *> compute_eps_ball(const vector<DistPoint>& distances, const double eps)
+{
+  vector<dataPoint *> eps_ball;
+  double dist = 0.0;
+  vector<DistPoint>::size_type index = 0;
+
+  while(dist < eps) {
+    eps_ball.push_back(distances[index].point);
+    ++index;
+    dist = distances[index].distance;
+  }
+    
+  return eps_ball;
+}
+
+//TODO: Fill these functions in.
+spectrum compute_normalized_spectrum(const vector<dataPoint *>& X)
+{
+  //Uses SLEPc to compute singular value spectra for a data set, and returns them normalized
+  // by the square root of the number of points in the data set.
+  spectrum spec;
+  return spec;
+}
+
+statusVector compute_status_vector(vector<spectrum> spectra, double eps)
+{
+  statusVector   status;
+  return status;
+}
+
+int compute_local_dimension(vector<spectrum> spectra, statusVector status, double cutoff)
+{
+  int local_dimension;
+  return local_dimension;
+}
+
+//This is the primary logic function.  This accepts a data set X, index, and max dimension
+// max_dim and returns the local scaling parameter and local dimension for the data point 
+// indicated by X[index], assuming the local dimension is no greater than max_dim. 
+
+LocalParameters local_scaling(const dataSet X&, const int index, const int max_dim)
+{
+  LocalParameters     params;
+  vector<DistPoint>   distances;
+  statusVector        status;
+  double              eps;
+  vector<double>      eps_partition;
+  vector<spectrum>    spectra;
+
+  // Compute vector<DistPoint> distances
+  distances = distances_from_point(index, X);
+
+  // Sort the data points by their distances from the target point
+  sort(distances.begin(), distances.end(), compare);
+
+  // For increasing values of eps, choose the points with rmsd(target, x) < eps
+  // and compute the singular values of the generated matrix.
+
+  eps_partition = partition_eps(eps);
+  vector<dataPoint *> eps_ball;
+
+  for (int i = 0; i < EPS_PARTITION_SIZE; ++i) { //These are all wishful-thinking functions
+    eps_ball = compute_eps_ball(distances, eps_partition[i]);
+    spectra[i] = compute_normalized_spectrum(data_segment, max_dim);
+  }
+
+  status = compute_status_vector(spectra, eps);
+
+  params.scale = eps_partition[find(status.first(), status.end(), 1]; // I think this is wrong...
+  params.dimension = compute_local_dimension(spectra, status, cutoff);
+  
+  return params;
+}
